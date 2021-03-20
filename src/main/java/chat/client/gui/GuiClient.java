@@ -1,131 +1,110 @@
 package chat.client.gui;
 
+
 import javax.swing.JFrame;
+import javax.swing.JTextField;
 import javax.swing.JButton;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.GroupLayout;
-import javax.swing.WindowConstants;
-import javax.swing.LayoutStyle;
-import javax.swing.UIManager;
 
-import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
-import java.awt.EventQueue;
+import java.awt.event.ActionListener;
 
-import java.io.IOException;
-import java.net.Socket;
+import chat.client.gui.InfoPopup;
+import chat.client.AbstractClient;
 
-import java.io.PrintStream;
 
-class GuiClient extends JFrame {
+/**
+ * Gui client to be used by user
+ */
+public class GuiClient extends AbstractClient {
 
-    private Socket client;
+    private static final int WIDTH = 410;
+    private static final int HEIGHT = 500;
 
-    private JButton sendButton;
-    private JTextArea textArea;
-    private JScrollPane scrollPane;
+    private String username;
 
+    private JFrame frame;
+
+    private JTextField messageInput;
+
+
+    /**
+     * Constructs client from address and port
+     * 
+     * @param address address to connect
+     * @param port port to connect
+     */
     public GuiClient(String address, int port) {
-        this.initComponents();
-        this.initSocket(address, port);
+        this.asksForCredentials();
+        this.loginToServer(address, port);
+        this.createChatInterface();
     }
 
-    private void initSocket(String address, int port) {
-        try {
-
-            this.client = new Socket(address, port);
-        }
-        catch (IOException ioe) {
-            System.out.println("Failed to open socket: " + ioe.getMessage());
-        }
+    /**
+     * Get user informations to connect
+     */
+    public void asksForCredentials() {
+        InfoPopup popup = new InfoPopup();
+        this.username = popup.getUsername();
     }
 
-    private void initComponents() {
-        this.sendButton = new JButton();
-        this.textArea = new JTextArea();
-        this.scrollPane = new JScrollPane();
 
-        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+    /**
+     * Connect to server and then send username
+     * 
+     * @param address address to server
+     * @param port port to connect
+     */
+    public void loginToServer(String address, int port) {
+        this.connectToServer(address, port);
+        this.send(this.username);
+    }
 
-        this.textArea.setColumns(20);
-        this.textArea.setRows(5);
-        this.scrollPane.setViewportView(this.textArea);
 
-        this.sendButton.setText("Enviar mensagem");
-        this.sendButton.addActionListener(new ActionListener() {
+    /**
+     * Create laytou for the chat user interface
+     */
+    public void createChatInterface() {
+        this.frame = new JFrame("Chat");
 
-            @Override
-            public void actionPerformed(ActionEvent evt) {
+        this.messageInput = new JTextField();
+        this.messageInput.setBounds(10, 20, 300, 30);
+
+        JButton submitButton = new JButton("Send");
+        submitButton.setBounds(320, 20, 80, 30);
+        submitButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
                 submitMessage();
             }
         });
 
-        GroupLayout layout = new GroupLayout(this.getContentPane());
-        getContentPane().setLayout(layout);
-
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
-                    .addComponent(this.scrollPane, GroupLayout.DEFAULT_SIZE, 376, Short.MAX_VALUE)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(this.sendButton)
-                        .addGap(0, 0, Short.MAX_VALUE)))
-                .addContainerGap())
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(this.scrollPane, GroupLayout.PREFERRED_SIZE, 228, GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(this.sendButton)
-                .addContainerGap(25, Short.MAX_VALUE)
-            )
-        );
-
-        this.pack();
-
-        System.out.println("packed!");
+        // add components to frame
+        this.frame.add(this.messageInput);
+        this.frame.add(submitButton);
+        
+        // setup frame and show it
+        this.frame.setSize(WIDTH, HEIGHT);
+        this.frame.setLayout(null);
+        this.frame.setVisible(true);
     }
 
+
+    /**
+     * Verify message and send it to server
+     */
     private void submitMessage() {
-        String message = this.textArea.getText();
-        this.textArea.setText("");
+        String message = this.messageInput.getText().trim();
 
-        try {
-
-            PrintStream output = new PrintStream(this.client.getOutputStream());
-            output.println(message);
-        }
-        catch (IOException ioe) {
-            System.out.println("Failed to send message: " + ioe.getMessage());
+        if (message.length() > 0) {
+            this.messageInput.setText("");
+            this.send(message);
         }
     }
 
-    public static void main(String[] args) {
-        final int PORT = 3333;
-        final String ADDRESS = "127.0.0.1";
 
-        try {
-            for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        }
-        catch (Exception err) {
-            System.out.println("Unexpected error occured! " + err.getMessage());
-        }
-
-        EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new GuiClient(ADDRESS, PORT).setVisible(true);
-            }
-        });
-
+    @Override
+    public void receive(String message) {
+        System.out.println(message);
     }
+
+
 }

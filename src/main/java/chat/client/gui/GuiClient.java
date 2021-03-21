@@ -2,9 +2,13 @@ package chat.client.gui;
 
 
 import javax.swing.JFrame;
+import javax.swing.JScrollBar;
 import javax.swing.JTextField;
+import javax.swing.JTextArea;
 import javax.swing.JButton;
+import javax.swing.JScrollPane;
 
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -21,9 +25,12 @@ public class GuiClient extends AbstractClient {
     private static final int HEIGHT = 500;
 
     private String username;
+    private String messages;
 
     private JFrame frame;
 
+    private JTextArea messagesDisplay;
+    private JScrollPane scrollMessages;
     private JTextField messageInput;
 
 
@@ -34,6 +41,8 @@ public class GuiClient extends AbstractClient {
      * @param port port to connect
      */
     public GuiClient(String address, int port) {
+        this.messages = "";
+
         this.asksForCredentials();
         this.loginToServer(address, port);
         this.createChatInterface();
@@ -61,16 +70,24 @@ public class GuiClient extends AbstractClient {
 
 
     /**
-     * Create laytou for the chat user interface
+     * Create layout for the chat user interface
      */
     public void createChatInterface() {
         this.frame = new JFrame("Chat");
 
+        this.messagesDisplay = new JTextArea();
+        this.messagesDisplay.setEditable(false);
+
+        this.scrollMessages = new JScrollPane();
+        this.scrollMessages.setViewportView(this.messagesDisplay);
+        this.scrollMessages.setBounds(10, 20, 390, 400);
+        //this.scrollMessages.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+
         this.messageInput = new JTextField();
-        this.messageInput.setBounds(10, 20, 300, 30);
+        this.messageInput.setBounds(10, 430, 300, 30);
 
         JButton submitButton = new JButton("Send");
-        submitButton.setBounds(320, 20, 80, 30);
+        submitButton.setBounds(320, 430, 80, 30);
         submitButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 submitMessage();
@@ -78,11 +95,13 @@ public class GuiClient extends AbstractClient {
         });
 
         // add components to frame
+        this.frame.add(this.scrollMessages);
         this.frame.add(this.messageInput);
         this.frame.add(submitButton);
         
         // setup frame and show it
         this.frame.setSize(WIDTH, HEIGHT);
+        this.frame.setResizable(false);
         this.frame.setLayout(null);
         this.frame.setVisible(true);
     }
@@ -101,9 +120,22 @@ public class GuiClient extends AbstractClient {
     }
 
 
+    /**
+     * Scrolls display down
+     */
+    private void scrollDownDisplay() {
+        JScrollBar vertical = this.scrollMessages.getVerticalScrollBar();
+        vertical.setValue(vertical.getMaximum());
+    }
+
+
     @Override
     public void receive(String message) {
-        System.out.println(message);
+        //System.out.println(message);
+
+        this.messages += message + '\n';
+        this.messagesDisplay.setText(this.messages);
+        this.scrollDownDisplay();
     }
 
 

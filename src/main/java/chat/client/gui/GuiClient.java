@@ -4,6 +4,7 @@ package chat.client.gui;
 import javax.swing.JFrame;
 import javax.swing.JScrollBar;
 import javax.swing.JTextField;
+import javax.swing.WindowConstants;
 import javax.swing.JTextArea;
 import javax.swing.JButton;
 import javax.swing.JScrollPane;
@@ -74,13 +75,14 @@ public class GuiClient extends AbstractClient {
     public void createChatInterface() {
         this.frame = new JFrame("Chat");
 
+        this.frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+
         this.messagesDisplay = new JTextArea();
         this.messagesDisplay.setEditable(false);
 
         this.scrollMessages = new JScrollPane();
         this.scrollMessages.setViewportView(this.messagesDisplay);
         this.scrollMessages.setBounds(10, 20, 390, 400);
-        //this.scrollMessages.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 
         this.messageInput = new JTextField();
         this.messageInput.setBounds(10, 430, 300, 30);

@@ -4,6 +4,7 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
+import javax.swing.WindowConstants;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -61,6 +62,8 @@ public class InfoPopup {
      */
     private void createWindow() {
         this.frame = new JFrame("Informations");
+
+        this.frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
         // input address
         JLabel addressLabel = new JLabel("Address");

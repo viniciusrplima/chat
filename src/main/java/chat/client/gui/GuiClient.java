@@ -25,6 +25,9 @@ public class GuiClient extends AbstractClient {
     private static final int HEIGHT = 500;
 
     private String username;
+    private String address;
+    private int port;
+
     private String messages;
 
     private JFrame frame;
@@ -36,15 +39,12 @@ public class GuiClient extends AbstractClient {
 
     /**
      * Constructs client from address and port
-     * 
-     * @param address address to connect
-     * @param port port to connect
      */
-    public GuiClient(String address, int port) {
+    public GuiClient() {
         this.messages = "";
 
         this.asksForCredentials();
-        this.loginToServer(address, port);
+        this.loginToServer();
         this.createChatInterface();
     }
 
@@ -54,17 +54,16 @@ public class GuiClient extends AbstractClient {
     public void asksForCredentials() {
         InfoPopup popup = new InfoPopup();
         this.username = popup.getUsername();
+        this.address = popup.getAddress();
+        this.port = popup.getPort();
     }
 
 
     /**
      * Connect to server and then send username
-     * 
-     * @param address address to server
-     * @param port port to connect
      */
-    public void loginToServer(String address, int port) {
-        this.connectToServer(address, port);
+    public void loginToServer() {
+        this.connectToServer(this.address, this.port);
         this.send(this.username);
     }
 

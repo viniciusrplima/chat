@@ -140,4 +140,7 @@ public class GuiClient extends AbstractClient {
     }
 
 
+    public static void main(String[] args) {
+        new GuiClient().start();
+    }
 }

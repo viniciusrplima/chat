@@ -18,6 +18,8 @@ import chat.server.ClientConnection;
 
 public class ChatServer extends Thread implements Server {
 
+    private static final int PORT = 3333;
+
     private ServerSocket server;
     private List<ClientConnection> clients;
 
@@ -118,7 +120,7 @@ public class ChatServer extends Thread implements Server {
 
         ClientConnection client = this.createClientConnection(socket);
         this.clients.add(client);
-        System.out.println("Client connected");
+        System.out.println(client.getName() + " was connected");
     }
 
     /**
@@ -134,5 +136,7 @@ public class ChatServer extends Thread implements Server {
         return connection;
     }
 
-
+    public static void main(String[] args) {
+        new ChatServer(PORT).start();
+    }
 }

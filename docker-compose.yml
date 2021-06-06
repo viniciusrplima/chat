@@ -1,0 +1,12 @@
+
+services:
+    server:
+        image: viniciusrplima/chat-server
+        build: .
+        ports:
+            - "3333:3333"
+        environment:
+            - PORT=3333
+        container_name: chat-server_container
+        volumes:
+            - ./target:/app/

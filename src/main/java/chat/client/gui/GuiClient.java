@@ -1,19 +1,14 @@
 package chat.client.gui;
 
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 
-import javax.swing.JFrame;
-import javax.swing.JScrollBar;
-import javax.swing.JTextField;
-import javax.swing.WindowConstants;
-import javax.swing.JTextArea;
-import javax.swing.JButton;
-import javax.swing.JScrollPane;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.ArrayList;
+import java.util.List;
 
-import java.awt.Color;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
-import chat.client.gui.InfoPopup;
+import chat.dto.MessageDTO;
 import chat.client.AbstractClient;
 
 
@@ -22,27 +17,28 @@ import chat.client.AbstractClient;
  */
 public class GuiClient extends AbstractClient {
 
-    private static final int WIDTH = 410;
+    private static final int WIDTH = 600;
     private static final int HEIGHT = 500;
 
     private String username;
     private String address;
     private int port;
 
-    private String messages;
-
     private JFrame frame;
 
-    private JTextArea messagesDisplay;
+    private JPanel messagesDisplay;
+    private GridBagConstraints grid;
     private JScrollPane scrollMessages;
     private JTextField messageInput;
+
+    private List<MessageDTO> messages;
 
 
     /**
      * Constructs client from address and port
      */
     public GuiClient() {
-        this.messages = "";
+        this.messages = new ArrayList<>();
 
         this.asksForCredentials();
         this.loginToServer();
@@ -75,17 +71,50 @@ public class GuiClient extends AbstractClient {
     public void createChatInterface() {
         this.frame = new JFrame("Chat");
 
-        this.frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        this.messagesDisplay = new JPanel();
+        this.messagesDisplay.setLayout(new GridBagLayout());
+        this.messagesDisplay.setAlignmentY(Component.BOTTOM_ALIGNMENT);
+        this.messagesDisplay.setSize(new Dimension(200, 0));
 
-        this.messagesDisplay = new JTextArea();
-        this.messagesDisplay.setEditable(false);
+        // Configuring Layout
+        this.grid = new GridBagConstraints();
+        this.grid.weightx = 1;
+        this.grid.weighty = 0;
+        this.grid.gridy = 0;
+        this.grid.gridx = 0;
+        this.grid.anchor = GridBagConstraints.LINE_START;
+        this.grid.insets = new Insets(5, 10, 5, 10);
 
         this.scrollMessages = new JScrollPane();
         this.scrollMessages.setViewportView(this.messagesDisplay);
+        this.scrollMessages.setAlignmentY(Component.BOTTOM_ALIGNMENT);
         this.scrollMessages.setBounds(10, 20, 390, 400);
+        this.scrollMessages.getVerticalScrollBar().addAdjustmentListener(new AdjustmentListener() {
+            @Override
+            public void adjustmentValueChanged(AdjustmentEvent adjustmentEvent) {
+                JScrollBar vertical = scrollMessages.getVerticalScrollBar();
+                vertical.setValue(vertical.getMaximum());
+            }
+        });
 
         this.messageInput = new JTextField();
         this.messageInput.setBounds(10, 430, 300, 30);
+
+        // Send message always enter button is pressed
+        this.messageInput.addKeyListener(new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent keyEvent) {}
+
+            @Override
+            public void keyPressed(KeyEvent keyEvent) {
+                if (keyEvent.getKeyCode() == KeyEvent.VK_ENTER) {
+                    submitMessage();
+                }
+            }
+
+            @Override
+            public void keyReleased(KeyEvent keyEvent) {}
+        });
 
         JButton submitButton = new JButton("Send");
         submitButton.setBounds(320, 430, 80, 30);
@@ -95,16 +124,32 @@ public class GuiClient extends AbstractClient {
             }
         });
 
-        // add components to frame
-        this.frame.add(this.scrollMessages);
-        this.frame.add(this.messageInput);
-        this.frame.add(submitButton);
-        
+        JPanel inputForm = new JPanel();
+        inputForm.setLayout(new BorderLayout());
+        inputForm.add(messageInput, BorderLayout.CENTER);
+        inputForm.add(submitButton, BorderLayout.EAST);
+        inputForm.setPreferredSize(new Dimension(0, 40));
+
         // setup frame and show it
         this.frame.setSize(WIDTH, HEIGHT);
-        this.frame.setResizable(false);
-        this.frame.setLayout(null);
+        this.frame.setLayout(new BorderLayout());
         this.frame.setVisible(true);
+        this.frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        this.frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowOpened(WindowEvent e) {
+                messageInput.requestFocus();
+            }
+        });
+
+        JPanel container = new JPanel();
+        container.setLayout(new BorderLayout());
+        container.setBorder(new EmptyBorder(10, 10, 10, 10));
+        this.frame.add(container, BorderLayout.CENTER);
+
+        // add components to frame
+        container.add(this.scrollMessages, BorderLayout.CENTER);
+        container.add(inputForm, BorderLayout.SOUTH);
     }
 
 
@@ -120,23 +165,18 @@ public class GuiClient extends AbstractClient {
         }
     }
 
+    private void addChatItem(MessageDTO dto) {
+        JPanel chatItem = new ChatItem(dto.getUsername(), dto.getMessage());
 
-    /**
-     * Scrolls display down
-     */
-    private void scrollDownDisplay() {
-        JScrollBar vertical = this.scrollMessages.getVerticalScrollBar();
-        vertical.setValue(vertical.getMaximum());
+        grid.gridy++;
+        this.messagesDisplay.add(chatItem, grid);
+        this.messagesDisplay.revalidate();
     }
 
-
     @Override
-    public void receive(String message) {
-        //System.out.println(message);
-
-        this.messages += message + '\n';
-        this.messagesDisplay.setText(this.messages);
-        this.scrollDownDisplay();
+    protected void receive(MessageDTO messageDto) {
+        this.messages.add(messageDto);
+        this.addChatItem(messageDto);
     }
 
 

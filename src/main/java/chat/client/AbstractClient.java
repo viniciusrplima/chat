@@ -6,7 +6,7 @@ import java.util.Scanner;
 import java.lang.Thread;
 import java.io.PrintStream;
 
-import chat.client.Client;
+import chat.dto.MessageDTO;
 
 /**
  * Abstract class for Client
@@ -87,5 +87,10 @@ public abstract class AbstractClient extends Thread implements Client {
         }
     }
 
+    @Override
+    public void receive(String message) {
+        receive(MessageDTO.decode(message));
+    }
 
+    protected abstract void receive(MessageDTO dto);
 }

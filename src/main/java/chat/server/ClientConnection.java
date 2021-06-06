@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.lang.Thread;
 import java.io.PrintStream;
 
+import chat.dto.MessageDTO;
+
 import chat.server.Server;
 
 /**
@@ -67,22 +69,15 @@ public class ClientConnection extends Thread {
 
         while (sc.hasNextLine()) {
             String message = sc.nextLine();
-            String formatedMessage = this.formatMessage(message);
+
+            MessageDTO dto = new MessageDTO();
+            dto.setMessage(message);
+            dto.setUsername(username);
+
+            String formatedMessage = MessageDTO.encode(dto);
 
             this.server.send(formatedMessage);
         }
     }
 
-
-    /**
-     * Format a given message
-     * 
-     * @param message message to be formated
-     * @return formated string message
-     */
-    private String formatMessage(String message) {
-        return String.format("[%s] %s", this.username, message);
-    }
-
-    
 }

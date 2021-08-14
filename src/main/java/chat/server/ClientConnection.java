@@ -6,19 +6,27 @@ import java.io.IOException;
 import java.lang.Thread;
 import java.io.PrintStream;
 
+import chat.dto.AcceptConnectionMessageDTO;
+import chat.dto.ChatMessageDTO;
 import chat.dto.MessageDTO;
-
+import chat.interpreter.MessageInterpreter;
+import chat.interpreter.interpreterimpl.MessageInterpreterImpl;
 import chat.server.Server;
 
 /**
- * Represents the connection from client
+ * Represents the connection with a single client
  */
 public class ClientConnection extends Thread {
 
     private Socket socket;
     private Server server;
+
+    private Long userId;
     private String username;
 
+    private MessageInterpreter interpreter;
+
+    private static Long userIdSequence = 1L;
 
     /**
      * Constructs ClientConnection from socket and server
@@ -29,16 +37,61 @@ public class ClientConnection extends Thread {
     public ClientConnection(Socket socket, Server server) {
         this.socket = socket;
         this.server = server;
+        this.userId = userIdSequence++;
+
+        this.interpreter = new MessageInterpreterImpl();
     }
 
+    public Socket getSocket() {
+        return socket;
+    }
+
+    public void setSocket(Socket socket) {
+        this.socket = socket;
+    }
+
+    public Server getServer() {
+        return server;
+    }
+
+    public void setServer(Server server) {
+        this.server = server;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
 
     @Override
     public void run() {
+        acceptConnection();
+
         try {
             this.listenMessages();
         }
         catch (IOException ioe) {
             System.out.println("Messages lost!");
+        }
+    }
+
+    public void acceptConnection() {
+        try {
+            MessageDTO acceptation = new AcceptConnectionMessageDTO(userId);
+            send(acceptation);
+        } catch (IOException e) {
+            System.out.println("Failed to connect with user: " + username);
         }
     }
 
@@ -54,6 +107,24 @@ public class ClientConnection extends Thread {
         clientStream.println(message);
     }
 
+    public void send(MessageDTO dto) throws IOException {
+        String messageEncoded = interpreter.encode(dto);
+        send(messageEncoded);
+    }
+
+    /**
+     * Send message to all clients connected
+     * 
+     * @param message message to be sent
+     */
+    private void sendToAll(String message) {
+        this.server.send(message);
+    }
+
+    private void sendToAll(MessageDTO dto) {
+        String messageEncoded = interpreter.encode(dto);
+        sendToAll(messageEncoded);
+    }
 
     /**
      * Wait for message that can be received from 
@@ -70,13 +141,9 @@ public class ClientConnection extends Thread {
         while (sc.hasNextLine()) {
             String message = sc.nextLine();
 
-            MessageDTO dto = new MessageDTO();
-            dto.setMessage(message);
-            dto.setUsername(username);
+            MessageDTO dto = new ChatMessageDTO(userId, username, message);
 
-            String formatedMessage = MessageDTO.encode(dto);
-
-            this.server.send(formatedMessage);
+            sendToAll(dto);
         }
     }
 

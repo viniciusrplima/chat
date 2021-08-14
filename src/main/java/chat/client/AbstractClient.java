@@ -6,7 +6,12 @@ import java.util.Scanner;
 import java.lang.Thread;
 import java.io.PrintStream;
 
+import chat.dto.AcceptConnectionMessageDTO;
+import chat.dto.ChatMessageDTO;
 import chat.dto.MessageDTO;
+import chat.dto.MessageType;
+import chat.interpreter.MessageInterpreter;
+import chat.interpreter.interpreterimpl.MessageInterpreterImpl;
 
 /**
  * Abstract class for Client
@@ -19,6 +24,13 @@ public abstract class AbstractClient extends Thread implements Client {
     private String address;
     private int port;
 
+    private Long userId;
+
+    private MessageInterpreter interpreter;
+
+    public AbstractClient() {
+        this.interpreter = new MessageInterpreterImpl();
+    }
 
     /**
      * Connect to server from ip address and port
@@ -48,6 +60,10 @@ public abstract class AbstractClient extends Thread implements Client {
 
     public int getPort() {
         return this.port;
+    }
+
+    public Long getUserId() {
+        return userId;
     }
 
 
@@ -89,8 +105,19 @@ public abstract class AbstractClient extends Thread implements Client {
 
     @Override
     public void receive(String message) {
-        receive(MessageDTO.decode(message));
+        MessageDTO messageDto = interpreter.decode(message);
+
+        if (messageDto.getType() == MessageType.ACCEPT_CONNECTION) {
+            proccessAcceptation((AcceptConnectionMessageDTO) messageDto);
+        }
+        else if (messageDto.getType() == MessageType.CHAT_MESSAGE) {
+            receive((ChatMessageDTO) messageDto);
+        }
     }
 
-    protected abstract void receive(MessageDTO dto);
+    public void proccessAcceptation(AcceptConnectionMessageDTO acceptation) {
+        userId = acceptation.getUserId();
+    }
+
+    protected abstract void receive(ChatMessageDTO dto);
 }

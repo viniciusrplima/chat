@@ -8,6 +8,7 @@ import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import chat.dto.ChatMessageDTO;
 import chat.dto.MessageDTO;
 import chat.client.AbstractClient;
 
@@ -15,7 +16,7 @@ import chat.client.AbstractClient;
 /**
  * Gui client to be used by user
  */
-public class GuiClient extends AbstractClient {
+public class ChatClient extends AbstractClient {
 
     private static final int WIDTH = 600;
     private static final int HEIGHT = 500;
@@ -37,7 +38,7 @@ public class GuiClient extends AbstractClient {
     /**
      * Constructs client from address and port
      */
-    public GuiClient() {
+    public ChatClient() {
         this.messages = new ArrayList<>();
 
         this.asksForCredentials();
@@ -165,22 +166,24 @@ public class GuiClient extends AbstractClient {
         }
     }
 
-    private void addChatItem(MessageDTO dto) {
-        JPanel chatItem = new ChatItem(dto.getUsername(), dto.getMessage());
+    private void addChatItem(ChatMessageDTO dto) {
+        boolean isOwner = dto.getUserId() == getUserId();
+        JPanel chatItem = new ChatItem(dto.getUsername(), dto.getText(), isOwner);
 
         grid.gridy++;
+
         this.messagesDisplay.add(chatItem, grid);
         this.messagesDisplay.revalidate();
     }
 
     @Override
-    protected void receive(MessageDTO messageDto) {
+    protected void receive(ChatMessageDTO messageDto) {
         this.messages.add(messageDto);
         this.addChatItem(messageDto);
     }
 
 
     public static void main(String[] args) {
-        new GuiClient().start();
+        new ChatClient().start();
     }
 }
